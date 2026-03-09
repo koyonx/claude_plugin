@@ -47,4 +47,15 @@ BACKUP_FILE="${BACKUP_DIR}/${SAFE_SESSION_ID}_${TIMESTAMP}.jsonl"
 cp "$RESOLVED_PATH" "$BACKUP_FILE"
 echo "Backed up transcript before compaction: $BACKUP_FILE" >&2
 
+# CWDを取得してサマリーをMEMORY.mdに書き込む
+CWD=$(echo "$INPUT" | jq -r '.cwd // empty') || true
+if [ -n "$CWD" ]; then
+    PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+    python3 "${PLUGIN_ROOT}/scripts/transcript_parser.py" \
+        --transcript "$RESOLVED_PATH" \
+        --session-id "$SESSION_ID" \
+        --cwd "$CWD" \
+        --write-memory 2>&1 || true
+fi
+
 exit 0

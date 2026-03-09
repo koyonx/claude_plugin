@@ -31,6 +31,15 @@
                         "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-session-start.sh"
                     }
                 ]
+            },
+            {
+                "matcher": "compact",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-compact-resume.sh"
+                    }
+                ]
             }
         ]
     }
