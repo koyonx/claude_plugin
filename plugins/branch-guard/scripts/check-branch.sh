@@ -11,18 +11,24 @@ if [ -z "$COMMAND" ]; then
     exit 0
 fi
 
-# gitコマンドでなければスキップ
-if ! echo "$COMMAND" | grep -qE '^\s*(git\s|git$)'; then
-    exit 0
-fi
-
-# git commit または git push かチェック
+# git commit / git push の検出（直接実行、サブシェル、bash -c 等を含む広範な検出）
 IS_COMMIT=false
 IS_PUSH=false
-if echo "$COMMAND" | grep -qE 'git\s+commit'; then
+
+# コマンド全体から git commit / git push パターンを検索
+# bash -c "git commit ...", sh -c "git push ...", (git commit), `git commit` 等にも対応
+if echo "$COMMAND" | grep -qE 'git\s+((-[a-zA-Z]+\s+\S+\s+)*)?commit'; then
     IS_COMMIT=true
 fi
-if echo "$COMMAND" | grep -qE 'git\s+push'; then
+if echo "$COMMAND" | grep -qE 'git\s+((-[a-zA-Z]+\s+\S+\s+)*)?push'; then
+    IS_PUSH=true
+fi
+
+# bash -c / sh -c 経由の実行も検出
+if echo "$COMMAND" | grep -qE '(bash|sh|zsh)\s+-c\s+.*git\s.*commit'; then
+    IS_COMMIT=true
+fi
+if echo "$COMMAND" | grep -qE '(bash|sh|zsh)\s+-c\s+.*git\s.*push'; then
     IS_PUSH=true
 fi
 
