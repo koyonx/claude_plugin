@@ -1,0 +1,10 @@
+{
+    "name": "prompt-template",
+    "description": "Save and reuse prompt templates for common tasks like code review, refactoring, and test writing.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["prompt", "template", "workflow", "productivity"]
+}
