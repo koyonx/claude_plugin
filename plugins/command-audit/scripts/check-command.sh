@@ -1,5 +1,9 @@
 #!/bin/bash
 # PreToolUse hook (Bash): 危険なコマンドを検出して警告し、全コマンドをログに記録する
+#
+# NOTE: 危険コマンド検出はテキストベースのパターンマッチによるベストエフォートです。
+# 変数展開、base64エンコード、eval等による間接実行は検出できません。
+# Claude Code本体の承認フローと併用してください。
 set -euo pipefail
 
 INPUT=$(cat)
@@ -17,31 +21,39 @@ if [ -z "$SAFE_SESSION_ID" ]; then
     SAFE_SESSION_ID="unknown"
 fi
 
-# ログディレクトリ
+# ログディレクトリ（パーミッション制限付き）
 LOG_DIR="$HOME/.claude/command-audit"
 mkdir -p "$LOG_DIR"
+chmod 700 "$LOG_DIR" 2>/dev/null || true
 
 SESSION_LOG="${LOG_DIR}/${SAFE_SESSION_ID}.jsonl"
+LOCK_FILE="${SESSION_LOG}.lock"
 
-# コマンドをログに記録（jqで安全なJSON生成）
+# コマンドをログに記録（jqで安全なJSON生成、flockで排他制御）
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-jq -n -c \
+LOG_ENTRY=$(jq -n -c \
     --arg cmd "$COMMAND" \
     --arg ts "$TIMESTAMP" \
     --arg cwd "$CWD" \
     --arg status "executed" \
-    '{"command": $cmd, "timestamp": $ts, "cwd": $cwd, "status": $status}' >> "$SESSION_LOG"
+    '{"command": $cmd, "timestamp": $ts, "cwd": $cwd, "status": $status}')
 
-# ログファイルサイズ制限 (10MB)
-MAX_LOG_SIZE=$((10 * 1024 * 1024))
-LOG_SIZE=$(stat -f%z "$SESSION_LOG" 2>/dev/null || stat -c%s "$SESSION_LOG" 2>/dev/null || echo 0)
-if [ "$LOG_SIZE" -gt "$MAX_LOG_SIZE" ]; then
-    # 古いエントリを削除（後半のみ保持）
-    tail -n 1000 "$SESSION_LOG" > "${SESSION_LOG}.tmp"
-    mv "${SESSION_LOG}.tmp" "$SESSION_LOG"
-fi
+(
+    flock -w 5 200 || exit 0
+    printf '%s\n' "$LOG_ENTRY" >> "$SESSION_LOG"
 
-# === 危険コマンド検出 ===
+    # ログファイルサイズ制限 (10MB)
+    MAX_LOG_SIZE=$((10 * 1024 * 1024))
+    LOG_SIZE=$(wc -c < "$SESSION_LOG" 2>/dev/null || echo 0)
+    if [ "$LOG_SIZE" -gt "$MAX_LOG_SIZE" ]; then
+        # 古いエントリを削除（後半のみ保持）
+        TMPFILE=$(mktemp "${SESSION_LOG}.XXXXXX")
+        tail -n 1000 "$SESSION_LOG" > "$TMPFILE"
+        mv "$TMPFILE" "$SESSION_LOG"
+    fi
+) 200>"$LOCK_FILE"
+
+# === 危険コマンド検出（ベストエフォート） ===
 
 # 危険パターンの定義
 DANGEROUS_PATTERNS=(
@@ -79,7 +91,7 @@ DANGEROUS_PATTERNS=(
 
 MATCHED_PATTERN=""
 for pattern in "${DANGEROUS_PATTERNS[@]}"; do
-    if echo "$COMMAND" | grep -qiE "$pattern"; then
+    if printf '%s\n' "$COMMAND" | grep -qiE "$pattern"; then
         MATCHED_PATTERN="$pattern"
         break
     fi
@@ -90,20 +102,24 @@ if [ -z "$MATCHED_PATTERN" ]; then
     exit 0
 fi
 
-# 危険コマンドをログに記録（ステータスを更新）
-jq -n -c \
+# 危険コマンドをログに記録（flockで排他制御）
+WARN_ENTRY=$(jq -n -c \
     --arg cmd "$COMMAND" \
     --arg ts "$TIMESTAMP" \
     --arg cwd "$CWD" \
     --arg status "warned" \
     --arg pattern "$MATCHED_PATTERN" \
-    '{"command": $cmd, "timestamp": $ts, "cwd": $cwd, "status": $status, "matched_pattern": $pattern}' >> "$SESSION_LOG"
+    '{"command": $cmd, "timestamp": $ts, "cwd": $cwd, "status": $status, "matched_pattern": $pattern}')
+
+(
+    flock -w 5 200 || exit 0
+    printf '%s\n' "$WARN_ENTRY" >> "$SESSION_LOG"
+) 200>"$LOCK_FILE"
 
 # 警告を表示（stderrはユーザーに表示される）
 echo "" >&2
-echo "⚠ === command-audit: DANGEROUS COMMAND DETECTED ===" >&2
-echo "Command: ${COMMAND}" >&2
-echo "Pattern: ${MATCHED_PATTERN}" >&2
+echo "=== command-audit: DANGEROUS COMMAND DETECTED ===" >&2
+printf 'Command: %s\n' "$COMMAND" >&2
 echo "===================================================" >&2
 
 # ブロックはせず警告のみ（ユーザーの承認フローに委ねる）

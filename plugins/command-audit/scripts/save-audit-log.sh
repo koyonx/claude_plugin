@@ -29,7 +29,7 @@ fi
 
 # 統計を計算
 TOTAL_COMMANDS=$(wc -l < "$SESSION_LOG" | tr -d ' ')
-WARNED_COUNT=$(grep -c '"warned"' "$SESSION_LOG" 2>/dev/null || echo 0)
+WARNED_COUNT=$(jq -c 'select(.status == "warned")' "$SESSION_LOG" 2>/dev/null | wc -l | tr -d ' ')
 
 if [ "$TOTAL_COMMANDS" -eq 0 ]; then
     exit 0
@@ -43,7 +43,7 @@ if [ "$WARNED_COUNT" -gt 0 ]; then
     echo "Dangerous commands warned: ${WARNED_COUNT}" >&2
     echo "" >&2
     echo "Warned commands:" >&2
-    grep '"warned"' "$SESSION_LOG" 2>/dev/null \
+    jq -c 'select(.status == "warned")' "$SESSION_LOG" 2>/dev/null \
         | jq -r '"  [\(.timestamp)] \(.command)"' 2>/dev/null \
         | head -10 >&2
     if [ "$WARNED_COUNT" -gt 10 ]; then
@@ -55,6 +55,6 @@ echo "Log: ${SESSION_LOG}" >&2
 echo "========================================" >&2
 
 # 古いログファイルの整理（30日以上前のものを削除）
-find "$LOG_DIR" -name "*.jsonl" -mtime +30 -delete 2>/dev/null || true
+find "$LOG_DIR" -maxdepth 1 -name "*.jsonl" -mtime +30 -delete 2>/dev/null || true
 
 exit 0
