@@ -30,8 +30,8 @@ if echo "$CWD" | grep -q '\.\.'; then
     exit 0
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-python3 "${SCRIPT_DIR}/../transcript_parser.py" \
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+python3 "${PLUGIN_ROOT}/scripts/transcript_parser.py" \
     --transcript "$RESOLVED_PATH" \
     --session-id "$SESSION_ID" \
     --cwd "$CWD" 2>&1 || true

@@ -14,18 +14,30 @@ Claude Codeのセッション会話履歴を自動保存するプラグイン。
 
 ## インストール
 
+### `/plugin` コマンドから（推奨）
+
 ```bash
-cd plugins/session-history
-chmod +x install.sh
-./install.sh
+# ローカルテスト
+claude --plugin-dir ./plugins/session-history
+
+# マーケットプレイスとして追加
+/plugin marketplace add ./plugins/session-history
 ```
 
-## アンインストール
+### 構成
 
-```bash
-cd plugins/session-history
-chmod +x uninstall.sh
-./uninstall.sh
+```
+session-history/
+├── .claude-plugin/
+│   └── plugin.json        # プラグインマニフェスト
+├── hooks/
+│   └── hooks.json         # hook定義
+├── scripts/
+│   ├── backup-before-compact.sh
+│   ├── save-session.sh
+│   ├── on-session-start.sh
+│   └── transcript_parser.py
+└── README.md
 ```
 
 ## 保存先
