@@ -1,0 +1,10 @@
+{
+    "name": "diff-snapshot",
+    "description": "Save file snapshots before modifications and diffs after, enabling easy rollback.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["diff", "snapshot", "backup", "rollback", "restore"]
+}
