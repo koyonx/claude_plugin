@@ -77,15 +77,36 @@ cmd_restore() {
     local orig_path
     orig_path=$(jq -r '.original_path' "$meta")
 
+    # 復元先パスの検証: パストラバーサルや危険なパスを拒否
+    if echo "$orig_path" | grep -q '\.\.'; then
+        echo "Error: original_path contains path traversal. Refusing to restore."
+        exit 1
+    fi
+
+    local resolved_path
+    resolved_path=$(realpath -m "$orig_path" 2>/dev/null || echo "")
+    if [ -z "$resolved_path" ]; then
+        echo "Error: cannot resolve path: ${orig_path}"
+        exit 1
+    fi
+
+    # ホームディレクトリ配下のシステムファイルへの上書きを防止
+    case "$resolved_path" in
+        "$HOME/.ssh/"*|"$HOME/.gnupg/"*|"/etc/"*|"/usr/"*|"/bin/"*|"/sbin/"*)
+            echo "Error: refusing to overwrite sensitive path: ${resolved_path}"
+            exit 1
+            ;;
+    esac
+
     echo "Restore: ${snapshot_file}"
-    echo "     To: ${orig_path}"
+    echo "     To: ${resolved_path}"
     read -p "Continue? (y/N) " confirm
     if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
         echo "Cancelled."
         exit 0
     fi
 
-    cp "$snapshot_file" "$orig_path"
+    cp "$snapshot_file" "$resolved_path"
     echo "Restored successfully."
 }
 

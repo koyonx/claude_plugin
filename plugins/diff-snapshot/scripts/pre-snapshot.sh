@@ -7,7 +7,9 @@ SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty') || exit 0
 TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input // empty') || exit 0
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty') || exit 0
 
-if [ -z "$SESSION_ID" ] || [ -z "$FILE_PATH" ]; then
+CWD=$(echo "$INPUT" | jq -r '.cwd // empty') || exit 0
+
+if [ -z "$SESSION_ID" ] || [ -z "$FILE_PATH" ] || [ -z "$CWD" ]; then
     exit 0
 fi
 
@@ -15,6 +17,18 @@ fi
 if [ ! -f "$FILE_PATH" ]; then
     exit 0
 fi
+
+# ファイルパスの検証: シンボリックリンクを解決してcwd配下であることを確認
+RESOLVED_FILE=$(realpath "$FILE_PATH" 2>/dev/null) || exit 0
+RESOLVED_CWD=$(realpath "$CWD" 2>/dev/null) || exit 0
+case "$RESOLVED_FILE" in
+    "$RESOLVED_CWD"/*)
+        ;;
+    *)
+        echo "Skipping snapshot: file outside project root" >&2
+        exit 0
+        ;;
+esac
 
 # ファイルサイズ制限 (50MB)
 MAX_SIZE=$((50 * 1024 * 1024))
@@ -38,7 +52,7 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 SAFE_NAME=$(echo "$FILE_PATH" | tr '/' '_' | tr -cd 'a-zA-Z0-9_.-')
 SNAPSHOT_FILE="${SNAPSHOT_DIR}/${TIMESTAMP}_${SAFE_NAME}.snapshot"
 
-cp "$FILE_PATH" "$SNAPSHOT_FILE"
+cp "$RESOLVED_FILE" "$SNAPSHOT_FILE"
 
 # メタデータを保存
 cat > "${SNAPSHOT_FILE}.meta" <<METAEOF
