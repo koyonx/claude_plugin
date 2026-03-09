@@ -3,6 +3,8 @@
 set -euo pipefail
 
 INPUT=$(cat)
+# jqの失敗時はfail-closed（ブロック側に倒す）ではなくexit 0とする
+# hookフレームワークの仕様上、exit 0が「許可」を意味するため
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty') || exit 0
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty') || exit 0
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty') || exit 0
@@ -47,12 +49,16 @@ if [ -z "$CURRENT_BRANCH" ]; then
 fi
 
 # 保護ブランチの設定を読み込み
+# CWDの検証: gitリポジトリのルートから設定を読む（CWD操作によるバイパスを防止）
 PROTECTED_BRANCHES="main master"
-CONFIG_FILE="${CWD:-.}/.branch-guard.json"
-if [ -f "$CONFIG_FILE" ]; then
-    CUSTOM_BRANCHES=$(jq -r '.protected_branches[]? // empty' "$CONFIG_FILE" 2>/dev/null || echo "")
-    if [ -n "$CUSTOM_BRANCHES" ]; then
-        PROTECTED_BRANCHES="$CUSTOM_BRANCHES"
+GIT_ROOT=$(git -C "${CWD:-.}" rev-parse --show-toplevel 2>/dev/null || echo "")
+if [ -n "$GIT_ROOT" ]; then
+    CONFIG_FILE="${GIT_ROOT}/.branch-guard.json"
+    if [ -f "$CONFIG_FILE" ]; then
+        CUSTOM_BRANCHES=$(jq -r '.protected_branches[]? // empty' "$CONFIG_FILE" 2>/dev/null || echo "")
+        if [ -n "$CUSTOM_BRANCHES" ]; then
+            PROTECTED_BRANCHES="$CUSTOM_BRANCHES"
+        fi
     fi
 fi
 
@@ -69,11 +75,13 @@ if [ "$IS_PROTECTED" = false ]; then
     exit 0
 fi
 
-# ブロック
+# ブロック（jqで安全なJSON生成）
 if [ "$IS_COMMIT" = true ]; then
-    echo "{\"decision\": \"block\", \"reason\": \"Direct commit to protected branch '${CURRENT_BRANCH}' is not allowed. Create a feature branch first.\"}"
+    jq -n --arg branch "$CURRENT_BRANCH" \
+        '{"decision": "block", "reason": ("Direct commit to protected branch \u0027" + $branch + "\u0027 is not allowed. Create a feature branch first.")}'
 elif [ "$IS_PUSH" = true ]; then
-    echo "{\"decision\": \"block\", \"reason\": \"Direct push to protected branch '${CURRENT_BRANCH}' is not allowed. Use a PR workflow.\"}"
+    jq -n --arg branch "$CURRENT_BRANCH" \
+        '{"decision": "block", "reason": ("Direct push to protected branch \u0027" + $branch + "\u0027 is not allowed. Use a PR workflow.")}'
 fi
 
 exit 0
