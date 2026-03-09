@@ -31,8 +31,19 @@ def validate_transcript_path(path: str) -> bool:
         return False
 
 
+MAX_TRANSCRIPT_SIZE = 100 * 1024 * 1024  # 100MB
+
+
 def parse_transcript(transcript_path: str) -> list[dict]:
     """JSONLトランスクリプトファイルを読み込んでイベントリストを返す。"""
+    file_size = Path(transcript_path).stat().st_size
+    if file_size > MAX_TRANSCRIPT_SIZE:
+        print(
+            f"Transcript too large ({file_size} bytes, max {MAX_TRANSCRIPT_SIZE}). Skipping.",
+            file=sys.stderr,
+        )
+        return []
+
     events = []
     with open(transcript_path, "r", encoding="utf-8") as f:
         for line in f:

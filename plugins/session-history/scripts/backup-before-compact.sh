@@ -28,6 +28,14 @@ if echo "$SESSION_ID" | grep -q '[/\\]'; then
     exit 0
 fi
 
+# ファイルサイズ制限 (100MB)
+MAX_SIZE=$((100 * 1024 * 1024))
+FILE_SIZE=$(stat -f%z "$RESOLVED_PATH" 2>/dev/null || stat -c%s "$RESOLVED_PATH" 2>/dev/null || echo 0)
+if [ "$FILE_SIZE" -gt "$MAX_SIZE" ]; then
+    echo "Transcript too large (${FILE_SIZE} bytes). Skipping backup." >&2
+    exit 0
+fi
+
 BACKUP_DIR="$HOME/.claude/session-history/compaction-backups"
 mkdir -p "$BACKUP_DIR"
 
