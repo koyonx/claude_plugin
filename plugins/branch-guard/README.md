@@ -39,7 +39,13 @@ claude --plugin-dir ./plugins/branch-guard
 # featureブランチでは通常通り動作します
 ```
 
+## 既知の制限
+
+- テキストベースのコマンド検出のため、`bash -c` ラップや変数展開等の高度な回避は完全には防げません
+- git エイリアスや `git merge` / `git rebase` 等は検出対象外です
+- サーバーサイドのブランチ保護ルール（GitHub Branch Protection）との併用を推奨します
+
 ## 依存関係
 
 - jq
-- git
+- git (2.22+)
