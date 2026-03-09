@@ -31,6 +31,8 @@ sudo apt install jq
 | [prompt-template](#prompt-template) | プロンプトテンプレートの保存・呼び出し | UserPromptSubmit |
 | [context-loader](#context-loader) | セッション開始時のコンテキスト自動読み込み | SessionStart |
 | [branch-guard](#branch-guard) | 保護ブランチへの直接コミット・プッシュ防止 | PreToolUse, SessionStart |
+| [todo-tracker](#todo-tracker) | TODO/FIXME/HACK コメントの自動検出・管理 | PostToolUse, SessionStart |
+| [command-audit](#command-audit) | コマンド実行ログ・危険コマンド警告 | PreToolUse, Stop |
 
 ## クイックスタート
 
@@ -164,6 +166,36 @@ Write/Edit 実行前後のファイルスナップショットを自動保存し
 
 > **Note**: テキストベースのコマンド検出のため、高度な回避手法には対応していません。GitHub Branch Protection との併用を推奨します。
 
+---
+
+### todo-tracker
+
+ファイル変更時に TODO/FIXME/HACK/XXX コメントを自動検出し、プロジェクト単位で管理します。技術的負債の可視化に。
+
+- **ファイル変更時**: 変更ファイルをスキャンして TODO マーカーを JSON に記録
+- **セッション開始時**: 未解決 TODO 一覧を表示（FIXME は優先表示）
+- 存在しなくなったファイルの TODO は自動通知
+
+保存先: `~/.claude/todo-tracker/`
+
+---
+
+### command-audit
+
+全 Bash コマンドをセッション単位で JSONL ログに記録し、危険なコマンドを検出して警告します。
+
+- **コマンド実行前**: コマンドをログに記録、危険パターン検出時に警告表示
+- **セッション終了時**: コマンド実行サマリーを表示
+- 30 日超の古いログを自動クリーンアップ
+
+検出対象: `rm -rf`、`git push --force`、`git reset --hard`、`DROP TABLE`、`chmod 777` 等
+
+> **Note**: テキストベースのパターンマッチによるベストエフォート検出です。変数展開や間接実行は検出できません。Claude Code 本体の承認フローと併用してください。
+
+保存先: `~/.claude/command-audit/`
+
+---
+
 ## データの保存先
 
 全プラグインのデータは `~/.claude/` 配下に保存されます。
@@ -176,7 +208,9 @@ Write/Edit 実行前後のファイルスナップショットを自動保存し
 ├── auto-commit-suggestion/   # auto-commit-suggestion
 ├── cost-tracker/             # cost-tracker
 ├── diff-snapshots/           # diff-snapshot
-└── prompt-templates/         # prompt-template (カスタムテンプレート)
+├── prompt-templates/         # prompt-template (カスタムテンプレート)
+├── todo-tracker/             # todo-tracker
+└── command-audit/            # command-audit
 ```
 
 ## ライセンス
