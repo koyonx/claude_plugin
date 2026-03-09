@@ -26,7 +26,7 @@ def validate_transcript_path(path: str) -> bool:
     claude_dir = Path.home() / ".claude"
     try:
         resolved = Path(path).resolve()
-        return str(resolved).startswith(str(claude_dir))
+        return resolved.is_relative_to(claude_dir)
     except (OSError, ValueError):
         return False
 
