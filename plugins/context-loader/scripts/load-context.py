@@ -58,11 +58,13 @@ def resolve_files(config: dict, project_root: Path) -> list[Path]:
     for pattern in config.get("globs", []):
         if not isinstance(pattern, str):
             continue
-        # パターンにパストラバーサルがないか確認
-        if ".." in pattern:
-            print(f"Skipping glob (path traversal): {pattern}", file=sys.stderr)
+        # パターンの安全性チェック: 相対パスのみ許可、パストラバーサル禁止
+        if ".." in pattern or pattern.startswith("/") or pattern.startswith("~"):
+            print(f"Skipping glob (unsafe pattern): {pattern}", file=sys.stderr)
             continue
-        matched = glob.glob(str(project_root / pattern), recursive=True)
+        # pathlibの結合で絶対パスが右辺にあると左辺が無視されるため、明示的に結合
+        glob_target = str(project_root) + "/" + pattern
+        matched = glob.glob(glob_target, recursive=True)
         for match in sorted(matched):
             match_path = Path(match)
             if not validate_path(match_path, project_root):
