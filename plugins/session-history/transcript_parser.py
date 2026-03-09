@@ -16,6 +16,11 @@ def sanitize_filename(name: str) -> str:
     return re.sub(r"[^a-zA-Z0-9_.\-]", "", name)
 
 
+def escape_markdown(text: str) -> str:
+    """Markdownの特殊文字をエスケープする。"""
+    return text.replace("`", "\\`").replace("<", "&lt;").replace(">", "&gt;")
+
+
 def validate_transcript_path(path: str) -> bool:
     """トランスクリプトパスが~/.claude配下であることを検証する。"""
     claude_dir = Path.home() / ".claude"
@@ -112,7 +117,7 @@ def events_to_markdown(events: list[dict], session_id: str, cwd: str) -> str:
     lines.append(f"# Session Log: {safe_id}")
     lines.append("")
     lines.append(f"- **Session ID**: `{safe_id}`")
-    lines.append(f"- **Project**: `{cwd}`")
+    lines.append(f"- **Project**: `{escape_markdown(cwd)}`")
     lines.append(f"- **Saved at**: {now}")
     lines.append("")
     lines.append("---")

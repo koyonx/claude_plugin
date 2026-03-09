@@ -12,9 +12,10 @@ if [ -z "$TRANSCRIPT_PATH" ] || [ -z "$SESSION_ID" ] || [ ! -f "$TRANSCRIPT_PATH
     exit 0
 fi
 
-# 入力バリデーション: transcript_pathが.claude配下であることを確認
+# 入力バリデーション: シンボリックリンクを解決してから.claude配下であることを確認
 CLAUDE_DIR="$HOME/.claude"
-case "$TRANSCRIPT_PATH" in
+RESOLVED_PATH=$(realpath "$TRANSCRIPT_PATH" 2>/dev/null) || exit 0
+case "$RESOLVED_PATH" in
     "$CLAUDE_DIR"/*)
         ;;
     *)
@@ -23,9 +24,15 @@ case "$TRANSCRIPT_PATH" in
         ;;
 esac
 
+# CWDバリデーション: パストラバーサル文字を含まないことを確認
+if echo "$CWD" | grep -q '\.\.'; then
+    echo "Invalid cwd: contains path traversal" >&2
+    exit 0
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 python3 "${SCRIPT_DIR}/../transcript_parser.py" \
-    --transcript "$TRANSCRIPT_PATH" \
+    --transcript "$RESOLVED_PATH" \
     --session-id "$SESSION_ID" \
     --cwd "$CWD" 2>&1 || true
 

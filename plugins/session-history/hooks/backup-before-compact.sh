@@ -10,9 +10,10 @@ if [ -z "$TRANSCRIPT_PATH" ] || [ -z "$SESSION_ID" ] || [ ! -f "$TRANSCRIPT_PATH
     exit 0
 fi
 
-# 入力バリデーション: transcript_pathが.claude配下であることを確認
+# 入力バリデーション: シンボリックリンクを解決してから.claude配下であることを確認
 CLAUDE_DIR="$HOME/.claude"
-case "$TRANSCRIPT_PATH" in
+RESOLVED_PATH=$(realpath "$TRANSCRIPT_PATH" 2>/dev/null) || exit 0
+case "$RESOLVED_PATH" in
     "$CLAUDE_DIR"/*)
         ;;
     *)
@@ -35,7 +36,7 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 SAFE_SESSION_ID=$(echo "$SESSION_ID" | tr -cd 'a-zA-Z0-9-')
 BACKUP_FILE="${BACKUP_DIR}/${SAFE_SESSION_ID}_${TIMESTAMP}.jsonl"
 
-cp "$TRANSCRIPT_PATH" "$BACKUP_FILE"
+cp "$RESOLVED_PATH" "$BACKUP_FILE"
 echo "Backed up transcript before compaction: $BACKUP_FILE" >&2
 
 exit 0
