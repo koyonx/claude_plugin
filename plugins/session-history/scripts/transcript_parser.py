@@ -21,6 +21,19 @@ def escape_markdown(text: str) -> str:
     return text.replace("`", "\\`").replace("<", "&lt;").replace(">", "&gt;")
 
 
+def sanitize_for_memory(text: str) -> str:
+    """MEMORY.mdに書き込む内容をサニタイズする（プロンプトインジェクション対策）。"""
+    # システムプロンプト風の指示を除去
+    text = re.sub(r"<[^>]+>", "", text)
+    # 改行を空白に置換（1行に収める）
+    text = text.replace("\n", " ").replace("\r", "")
+    # 制御文字を除去
+    text = re.sub(r"[\x00-\x1f\x7f]", "", text)
+    # 連続空白を1つに
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
 def validate_transcript_path(path: str) -> bool:
     """トランスクリプトパスが~/.claude配下であることを検証する。"""
     claude_dir = Path.home() / ".claude"
@@ -228,8 +241,8 @@ def generate_summary(events: list[dict], max_lines: int = 50) -> str:
             text = strip_system_tags(text)
             if not text:
                 continue
-            # ユーザーのプロンプトを要約（先頭100文字）
-            short = text[:100].replace("\n", " ").strip()
+            # ユーザーのプロンプトを要約（先頭100文字）+ サニタイズ
+            short = sanitize_for_memory(text[:100])
             if len(text) > 100:
                 short += "..."
             user_topics.append(short)
@@ -246,11 +259,13 @@ def generate_summary(events: list[dict], max_lines: int = 50) -> str:
                         tool_name = block.get("name", "")
                         tool_input = block.get("input", {})
                         if tool_name == "Write":
-                            tools_used.append(f"Write: {tool_input.get('file_path', '')}")
+                            fp = sanitize_for_memory(tool_input.get('file_path', ''))
+                            tools_used.append(f"Write: {fp}")
                         elif tool_name == "Edit":
-                            tools_used.append(f"Edit: {tool_input.get('file_path', '')}")
+                            fp = sanitize_for_memory(tool_input.get('file_path', ''))
+                            tools_used.append(f"Edit: {fp}")
                         elif tool_name == "Bash":
-                            cmd = tool_input.get("command", "")[:60]
+                            cmd = sanitize_for_memory(tool_input.get("command", "")[:60])
                             tools_used.append(f"Bash: {cmd}")
             if tools_used:
                 assistant_actions.extend(tools_used)
@@ -307,6 +322,11 @@ def write_summary_to_memory(
         print(f"Invalid transcript path: {transcript_path}", file=sys.stderr)
         return None
 
+    # CWDが実在するディレクトリであることを検証
+    if not cwd or not Path(cwd).is_dir():
+        print(f"Invalid cwd: {cwd}", file=sys.stderr)
+        return None
+
     events = parse_transcript(transcript_path)
     if not events:
         return None
@@ -315,9 +335,6 @@ def write_summary_to_memory(
     if not summary:
         return None
 
-    # プロジェクトのmemoryディレクトリを特定
-    # transcript_pathから推測: ~/.claude/projects/<project-id>/...
-    transcript_p = Path(transcript_path).resolve()
     claude_dir = Path.home() / ".claude"
 
     # プロジェクトのmemoryディレクトリを検索

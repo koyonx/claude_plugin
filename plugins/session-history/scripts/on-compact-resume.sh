@@ -29,8 +29,10 @@ fi
 # stdoutへの出力はClaudeのコンテキストに注入される
 if grep -q "## Session History Summary" "$MEMORY_FILE" 2>/dev/null; then
     echo "=== Previous Session Context (restored after compaction) ==="
-    # サマリーセクションのみ抽出
-    sed -n '/## Session History Summary/,$p' "$MEMORY_FILE"
+    # サマリーセクションのみ抽出し、HTMLタグ・制御文字を除去してから出力
+    sed -n '/## Session History Summary/,$p' "$MEMORY_FILE" \
+        | sed 's/<[^>]*>//g' \
+        | tr -d '\000-\010\013\014\016-\037\177'
     echo "=== End of Previous Session Context ==="
 fi
 
