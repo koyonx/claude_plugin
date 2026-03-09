@@ -1,0 +1,10 @@
+{
+    "name": "context-loader",
+    "description": "Automatically load important project files into context at session start.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["context", "loader", "auto", "session", "productivity"]
+}
