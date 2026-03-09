@@ -1,0 +1,10 @@
+{
+    "name": "branch-guard",
+    "description": "Prevent direct commits and pushes to protected branches (main/master).",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["branch", "guard", "protection", "safety", "git"]
+}
