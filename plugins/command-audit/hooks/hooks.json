@@ -1,0 +1,26 @@
+{
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Bash",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-command.sh"
+                    }
+                ]
+            }
+        ],
+        "Stop": [
+            {
+                "matcher": "",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "${CLAUDE_PLUGIN_ROOT}/scripts/save-audit-log.sh"
+                    }
+                ]
+            }
+        ]
+    }
+}
