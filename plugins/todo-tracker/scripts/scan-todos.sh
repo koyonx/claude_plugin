@@ -7,7 +7,7 @@ TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty') || exit 0
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty') || exit 0
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty') || exit 0
 
-if [ -z "$TOOL_NAME" ] || [ -z "$FILE_PATH" ]; then
+if [ -z "$TOOL_NAME" ] || [ -z "$FILE_PATH" ] || [ -z "$CWD" ]; then
     exit 0
 fi
 
@@ -21,34 +21,32 @@ if [ ! -f "$FILE_PATH" ]; then
     exit 0
 fi
 
-# ファイルパスの検証: CWD配下であることを確認
-if [ -n "$CWD" ]; then
-    RESOLVED_FILE=$(realpath "$FILE_PATH" 2>/dev/null) || exit 0
-    RESOLVED_CWD=$(realpath "$CWD" 2>/dev/null) || exit 0
-    case "$RESOLVED_FILE" in
-        "$RESOLVED_CWD"/*)
-            ;;
-        *)
-            exit 0
-            ;;
-    esac
-fi
+# ファイルパスの検証: CWD配下であることを確認（解決済みパスを以後使用）
+RESOLVED_FILE=$(realpath "$FILE_PATH" 2>/dev/null) || exit 0
+RESOLVED_CWD=$(realpath "$CWD" 2>/dev/null) || exit 0
+case "$RESOLVED_FILE" in
+    "$RESOLVED_CWD"/*)
+        ;;
+    *)
+        exit 0
+        ;;
+esac
 
-# バイナリファイルはスキップ
-if file --brief --mime-type "$FILE_PATH" 2>/dev/null | grep -qv '^text/'; then
+# バイナリファイルはスキップ（解決済みパスを使用）
+if file --brief --mime-type "$RESOLVED_FILE" 2>/dev/null | grep -qv '^text/'; then
     exit 0
 fi
 
 # ファイルサイズ制限 (1MB)
 MAX_SIZE=$((1 * 1024 * 1024))
-FILE_SIZE=$(stat -f%z "$FILE_PATH" 2>/dev/null || stat -c%s "$FILE_PATH" 2>/dev/null || echo 999999999)
+FILE_SIZE=$(wc -c < "$RESOLVED_FILE" 2>/dev/null || echo 999999999)
 if [ "$FILE_SIZE" -gt "$MAX_SIZE" ]; then
     exit 0
 fi
 
-# TODO/FIXME/HACKパターンを検出
+# TODO/FIXME/HACKパターンを検出（解決済みパスを使用）
 MARKERS="TODO|FIXME|HACK|XXX"
-MATCHES=$(grep -n -i -E "(${MARKERS})[[:space:]:]" "$FILE_PATH" 2>/dev/null || true)
+MATCHES=$(grep -n -i -E "(${MARKERS})[[:space:]:]" "$RESOLVED_FILE" 2>/dev/null || true)
 
 if [ -z "$MATCHES" ]; then
     exit 0
@@ -81,8 +79,7 @@ else
 fi
 
 # このファイルの既存エントリを削除（再スキャン結果で置換）
-SAFE_FILE_PATH=$(echo "$FILE_PATH" | tr -cd 'a-zA-Z0-9/_. -')
-EXISTING=$(echo "$EXISTING" | jq --arg fp "$FILE_PATH" '[.[] | select(.file != $fp)]')
+EXISTING=$(echo "$EXISTING" | jq --arg fp "$RESOLVED_FILE" '[.[] | select(.file != $fp)]')
 
 # 新しいTODOエントリを追加
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -95,7 +92,7 @@ while IFS= read -r line; do
     CLEAN_CONTENT=$(echo "$LINE_CONTENT" | sed 's/<[^>]*>//g' | tr -d '\000-\010\013\014\016-\037\177' | head -c 200)
 
     EXISTING=$(echo "$EXISTING" | jq \
-        --arg file "$FILE_PATH" \
+        --arg file "$RESOLVED_FILE" \
         --arg line "$LINE_NUM" \
         --arg content "$CLEAN_CONTENT" \
         --arg marker "$MARKER_TYPE" \
@@ -115,7 +112,8 @@ echo "$EXISTING" | jq '.' > "$TODO_FILE"
 NEW_COUNT=$(echo "$MATCHES" | wc -l | tr -d ' ')
 echo "" >&2
 echo "=== todo-tracker ===" >&2
-echo "Found ${NEW_COUNT} TODO/FIXME marker(s) in $(basename "$FILE_PATH")" >&2
+DISPLAY_NAME=$(basename "$RESOLVED_FILE" | tr -cd 'a-zA-Z0-9_.-')
+echo "Found ${NEW_COUNT} TODO/FIXME marker(s) in ${DISPLAY_NAME}" >&2
 echo "====================" >&2
 
 exit 0

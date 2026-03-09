@@ -65,12 +65,21 @@ if [ "$FIXME_COUNT" -gt 0 ]; then
 fi
 
 # 存在しないファイルのエントリ数を表示（解決済みの可能性）
+# CWD配下のファイルのみチェック（任意パスの存在確認を防止）
+RESOLVED_CWD=$(realpath "$CWD" 2>/dev/null) || RESOLVED_CWD=""
 STALE_COUNT=0
-while IFS= read -r filepath; do
-    if [ ! -f "$filepath" ]; then
-        STALE_COUNT=$((STALE_COUNT + 1))
-    fi
-done < <(jq -r '.[].file' "$TODO_FILE" 2>/dev/null | sort -u)
+if [ -n "$RESOLVED_CWD" ]; then
+    while IFS= read -r filepath; do
+        # CWD配下のパスのみ確認
+        case "$filepath" in
+            "$RESOLVED_CWD"/*)
+                if [ ! -f "$filepath" ]; then
+                    STALE_COUNT=$((STALE_COUNT + 1))
+                fi
+                ;;
+        esac
+    done < <(jq -r '.[].file' "$TODO_FILE" 2>/dev/null | sort -u)
+fi
 
 if [ "$STALE_COUNT" -gt 0 ]; then
     echo "" >&2
