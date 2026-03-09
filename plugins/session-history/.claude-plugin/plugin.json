@@ -1,0 +1,17 @@
+{
+    "name": "session-history",
+    "description": "Automatically save Claude Code conversation history per session as readable Markdown, with backup before compaction.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "repository": "https://github.com/koyonx/claude_plugin",
+    "license": "MIT",
+    "keywords": [
+        "session",
+        "history",
+        "backup",
+        "transcript",
+        "compaction"
+    ]
+}
