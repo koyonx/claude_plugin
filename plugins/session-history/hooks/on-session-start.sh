@@ -10,12 +10,19 @@ if [ -z "$CWD" ]; then
     exit 0
 fi
 
-# プロジェクトパスからディレクトリ名を生成
-PROJECT_NAME=$(echo "$CWD" | sed 's|/|_|g' | sed 's|^_||')
+# プロジェクトパスからディレクトリ名を生成（英数字・ハイフン・アンダースコアのみ）
+PROJECT_NAME=$(echo "$CWD" | sed 's|/|_|g' | sed 's|^_||' | tr -cd 'a-zA-Z0-9_.-')
 SESSION_DIR="$HOME/.claude/session-history/sessions/${PROJECT_NAME}"
 
 if [ -d "$SESSION_DIR" ]; then
-    LATEST=$(ls -t "$SESSION_DIR"/*.md 2>/dev/null | head -1)
+    # globで最新ファイルを取得（ls -tのパース問題を回避）
+    LATEST=""
+    for f in "$SESSION_DIR"/*.md; do
+        [ -f "$f" ] || continue
+        if [ -z "$LATEST" ] || [ "$f" -nt "$LATEST" ]; then
+            LATEST="$f"
+        fi
+    done
     if [ -n "$LATEST" ]; then
         echo "Previous session log: $LATEST" >&2
     fi

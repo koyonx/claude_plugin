@@ -10,11 +10,30 @@ if [ -z "$TRANSCRIPT_PATH" ] || [ -z "$SESSION_ID" ] || [ ! -f "$TRANSCRIPT_PATH
     exit 0
 fi
 
+# 入力バリデーション: transcript_pathが.claude配下であることを確認
+CLAUDE_DIR="$HOME/.claude"
+case "$TRANSCRIPT_PATH" in
+    "$CLAUDE_DIR"/*)
+        ;;
+    *)
+        echo "Invalid transcript path: not under ~/.claude" >&2
+        exit 0
+        ;;
+esac
+
+# session_idにパス区切り文字が含まれていないことを確認
+if echo "$SESSION_ID" | grep -q '[/\\]'; then
+    echo "Invalid session_id: contains path separators" >&2
+    exit 0
+fi
+
 BACKUP_DIR="$HOME/.claude/session-history/compaction-backups"
 mkdir -p "$BACKUP_DIR"
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_FILE="${BACKUP_DIR}/${SESSION_ID}_${TIMESTAMP}.jsonl"
+# session_idから英数字とハイフンのみ抽出
+SAFE_SESSION_ID=$(echo "$SESSION_ID" | tr -cd 'a-zA-Z0-9-')
+BACKUP_FILE="${BACKUP_DIR}/${SAFE_SESSION_ID}_${TIMESTAMP}.jsonl"
 
 cp "$TRANSCRIPT_PATH" "$BACKUP_FILE"
 echo "Backed up transcript before compaction: $BACKUP_FILE" >&2

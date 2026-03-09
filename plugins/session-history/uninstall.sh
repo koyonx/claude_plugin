@@ -19,8 +19,12 @@ import sys
 settings_file = sys.argv[1]
 hooks_dir = sys.argv[2]
 
-with open(settings_file, "r") as f:
-    settings = json.load(f)
+try:
+    with open(settings_file, "r") as f:
+        settings = json.load(f)
+except (json.JSONDecodeError, OSError) as e:
+    print(f"Failed to read settings: {e}")
+    sys.exit(1)
 
 if "hooks" not in settings:
     print("No hooks found. Nothing to uninstall.")
