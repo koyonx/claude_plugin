@@ -1,0 +1,10 @@
+{
+    "name": "cost-tracker",
+    "description": "Track token usage and costs per session with daily/weekly reports.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["cost", "token", "usage", "tracking", "report"]
+}
