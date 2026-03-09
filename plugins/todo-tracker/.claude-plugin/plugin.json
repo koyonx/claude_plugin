@@ -1,0 +1,10 @@
+{
+    "name": "todo-tracker",
+    "description": "Automatically detect and track TODO/FIXME/HACK comments in modified files.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["todo", "fixme", "tracker", "technical-debt"]
+}
