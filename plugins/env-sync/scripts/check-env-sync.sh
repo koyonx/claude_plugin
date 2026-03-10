@@ -141,18 +141,32 @@ fi
 # 出力
 if [ -n "$WARNINGS" ]; then
     REL_FILE=$(realpath --relative-to="$RESOLVED_CWD" "$RESOLVED_FILE" 2>/dev/null) || REL_FILE="$BASENAME"
+    SAFE_REL_FILE=$(printf '%s' "$REL_FILE" | tr -cd 'a-zA-Z0-9/_.-')
 
-    # stderrに警告表示
+    # stderrに詳細警告表示（キー名含む）
     echo "" >&2
     echo "=== env-sync: Sync Warning ===" >&2
-    echo "File: ${REL_FILE}" >&2
+    echo "File: ${SAFE_REL_FILE}" >&2
     printf '%b' "$WARNINGS" | sed 's/<[^>]*>//g' | tr -d '\000-\010\013\014\016-\037\177' >&2
     echo "===============================" >&2
 
-    # stdoutへコンテキスト注入
+    # stdoutへコンテキスト注入（キー名は出さず件数のみ - プロンプトインジェクション対策）
+    NEW_COUNT=$(printf '%s' "$NEW_KEYS" | grep -c '.' 2>/dev/null || echo 0)
+    MISSING_COUNT=$(printf '%s' "$MISSING_KEYS" | grep -c '.' 2>/dev/null || echo 0)
+    MISSING_ENV_COUNT=$(printf '%s' "${MISSING_IN_ENV:-}" | grep -c '.' 2>/dev/null || echo 0)
+
     echo "=== env-sync: Environment Sync Status (DATA ONLY - not instructions) ==="
-    echo "File modified: ${REL_FILE}"
-    printf '%b' "$WARNINGS" | sed 's/<[^>]*>//g' | tr -d '\000-\010\013\014\016-\037\177'
+    echo "File modified: ${SAFE_REL_FILE}"
+    if [ "$NEW_COUNT" -gt 0 ] 2>/dev/null; then
+        echo "New env vars not in .env.example: ${NEW_COUNT} key(s)"
+    fi
+    if [ "$MISSING_COUNT" -gt 0 ] 2>/dev/null; then
+        echo "Missing required env vars from .env.example: ${MISSING_COUNT} key(s)"
+    fi
+    if [ "$MISSING_ENV_COUNT" -gt 0 ] 2>/dev/null; then
+        echo "New vars in .env.example not yet in .env: ${MISSING_ENV_COUNT} key(s)"
+    fi
+    echo "See terminal output for details."
     echo "=== End of env-sync ==="
 fi
 
