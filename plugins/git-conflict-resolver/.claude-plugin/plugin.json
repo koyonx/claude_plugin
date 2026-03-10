@@ -1,0 +1,10 @@
+{
+    "name": "git-conflict-resolver",
+    "description": "Detect merge conflicts and provide context about both branches' changes to aid resolution.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["git", "merge", "conflict", "resolution", "branch"]
+}
