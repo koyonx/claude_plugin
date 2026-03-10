@@ -38,13 +38,14 @@ TRENDS=$(
         flock -s -w 5 200 || exit 0
 
         # ビルドコマンドのみ抽出してトレンドを計算
+        # base_cmdは安全な文字のみ（tr -cd済み）なのでstdout出力可能
         jq -rs '
             [.[] | select(.is_build == true)] |
             if length == 0 then empty
             else
                 group_by(.base_cmd) |
                 map({
-                    cmd: .[0].base_cmd,
+                    cmd: (.[0].base_cmd | gsub("[^a-zA-Z0-9_./-]"; "")),
                     count: length,
                     avg_ms: ([.[].duration_ms] | add / length | floor),
                     last5: (.[- (if length < 5 then length else 5 end):] | [.[].duration_ms]),

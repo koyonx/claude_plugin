@@ -17,6 +17,14 @@ if [ -z "$COMMAND" ]; then
     exit 0
 fi
 
+# 数値バリデーション（整数のみ許可）
+if ! printf '%s' "$DURATION_MS" | grep -qE '^[0-9]+$'; then
+    DURATION_MS=0
+fi
+if ! printf '%s' "$EXIT_CODE" | grep -qE '^[0-9]+$'; then
+    EXIT_CODE=0
+fi
+
 # データディレクトリ
 DATA_DIR="$HOME/.claude/performance-monitor"
 mkdir -p "$DATA_DIR"
@@ -93,15 +101,20 @@ if [ "$DURATION_MS" -gt 1000 ] && [ -n "$BASE_CMD" ]; then
         ) 200>"${LOG_FILE}.lock"
     ) || AVG_DURATION=0
 
+    # AVG_DURATIONも数値バリデーション
+    if ! printf '%s' "$AVG_DURATION" | grep -qE '^[0-9]+$'; then
+        AVG_DURATION=0
+    fi
+
     if [ "$AVG_DURATION" -gt 0 ]; then
         THRESHOLD=$((AVG_DURATION * 2))
         if [ "$DURATION_MS" -gt "$THRESHOLD" ]; then
+            RATIO=$(echo "scale=1; $DURATION_MS / $AVG_DURATION" | bc 2>/dev/null || echo "?")
             echo "" >&2
             echo "=== performance-monitor: ANOMALY ===" >&2
             printf '  Command: %s\n' "$BASE_CMD" >&2
-            printf '  Duration: %dms (avg: %dms, %.1fx slower)\n' \
-                "$DURATION_MS" "$AVG_DURATION" \
-                "$(echo "scale=1; $DURATION_MS / $AVG_DURATION" | bc 2>/dev/null || echo "?")" >&2
+            printf '  Duration: %dms (avg: %dms, %sx slower)\n' \
+                "$DURATION_MS" "$AVG_DURATION" "$RATIO" >&2
             echo "=====================================" >&2
         fi
     fi
