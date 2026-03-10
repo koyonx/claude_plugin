@@ -1,0 +1,10 @@
+{
+    "name": "api-doc-sync",
+    "description": "Detect API endpoint changes and warn when API documentation is out of sync.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["api", "documentation", "openapi", "swagger", "sync", "endpoints"]
+}
