@@ -1,0 +1,315 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "koyonx-claude-plugins",
+  "description": "Claude Code プラグインコレクション — セッション管理、セキュリティ、コード品質、開発効率を向上させるプラグイン集",
+  "owner": {
+    "name": "koyonx"
+  },
+  "plugins": [
+    {
+      "name": "session-history",
+      "description": "Automatically save Claude Code conversation history per session as readable Markdown, with backup before compaction.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/session-history",
+      "category": "productivity",
+      "hooks": {
+        "PreCompact": [{ "matcher": "", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/backup-before-compact.sh" }] }],
+        "Stop": [{ "matcher": "", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/save-session.sh" }] }],
+        "SessionStart": [
+          { "matcher": "startup|resume", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-session-start.sh" }] },
+          { "matcher": "compact", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-compact-resume.sh" }] }
+        ]
+      }
+    },
+    {
+      "name": "auto-commit-suggestion",
+      "description": "Suggest git commits after a configurable number of file changes to prevent work loss.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/auto-commit-suggestion",
+      "category": "productivity",
+      "hooks": {
+        "PostToolUse": [{ "matcher": "Write|Edit|Bash", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/track-changes.sh" }] }]
+      }
+    },
+    {
+      "name": "cost-tracker",
+      "description": "Track token usage and costs per session with daily/weekly reports.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/cost-tracker",
+      "category": "productivity",
+      "hooks": {
+        "Stop": [{ "matcher": "", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/record-usage.sh" }] }],
+        "SessionStart": [{ "matcher": "startup|resume", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/show-summary.sh" }] }]
+      }
+    },
+    {
+      "name": "diff-snapshot",
+      "description": "Save file snapshots before modifications and diffs after, enabling easy rollback.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/diff-snapshot",
+      "category": "productivity",
+      "hooks": {
+        "PreToolUse": [{ "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/pre-snapshot.sh" }] }],
+        "PostToolUse": [{ "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/post-diff.sh" }] }]
+      }
+    },
+    {
+      "name": "prompt-template",
+      "description": "Save and reuse prompt templates for common tasks like code review, refactoring, and test writing.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/prompt-template",
+      "category": "productivity",
+      "hooks": {
+        "UserPromptSubmit": [{ "matcher": "", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/handle-template.sh" }] }]
+      }
+    },
+    {
+      "name": "context-loader",
+      "description": "Automatically load important project files into context at session start.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/context-loader",
+      "category": "productivity",
+      "hooks": {
+        "SessionStart": [{ "matcher": "startup", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/load-context.py" }] }]
+      }
+    },
+    {
+      "name": "branch-guard",
+      "description": "Prevent direct commits and pushes to protected branches (main/master).",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/branch-guard",
+      "category": "security",
+      "hooks": {
+        "PreToolUse": [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-branch.sh" }] }],
+        "SessionStart": [{ "matcher": "startup", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/show-branch-info.sh" }] }]
+      }
+    },
+    {
+      "name": "todo-tracker",
+      "description": "Automatically detect and track TODO/FIXME/HACK comments in modified files.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/todo-tracker",
+      "category": "development",
+      "hooks": {
+        "PostToolUse": [{ "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/scan-todos.sh" }] }],
+        "SessionStart": [{ "matcher": "startup|resume", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/show-todos.sh" }] }]
+      }
+    },
+    {
+      "name": "command-audit",
+      "description": "Log all shell commands and warn before executing dangerous operations.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/command-audit",
+      "category": "security",
+      "hooks": {
+        "PreToolUse": [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-command.sh" }] }],
+        "Stop": [{ "matcher": "", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/save-audit-log.sh" }] }]
+      }
+    },
+    {
+      "name": "error-memory",
+      "description": "Learn from command errors and automatically suggest past solutions when similar errors recur.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/error-memory",
+      "category": "development",
+      "hooks": {
+        "PostToolUse": [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/record-error.sh" }] }],
+        "SessionStart": [{ "matcher": "startup|resume", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/show-known-errors.sh" }] }]
+      }
+    },
+    {
+      "name": "smart-context-injector",
+      "description": "Automatically enrich user prompts with related files, tests, and recent changes.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/smart-context-injector",
+      "category": "productivity",
+      "hooks": {
+        "UserPromptSubmit": [{ "matcher": "", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enrich-prompt.py" }] }]
+      }
+    },
+    {
+      "name": "change-impact-analyzer",
+      "description": "Analyze import/dependency graphs to show impact of file changes and warn about affected files.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/change-impact-analyzer",
+      "category": "development",
+      "hooks": {
+        "PostToolUse": [{ "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/analyze-impact.py" }] }]
+      }
+    },
+    {
+      "name": "workflow-replay",
+      "description": "Record tool operations as reusable workflow recipes and replay them in other projects.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/workflow-replay",
+      "category": "productivity",
+      "hooks": {
+        "PostToolUse": [{ "matcher": "Write|Edit|Bash", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/record-step.sh" }] }],
+        "UserPromptSubmit": [{ "matcher": "", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/handle-replay.sh" }] }]
+      }
+    },
+    {
+      "name": "session-handoff",
+      "description": "Generate handoff notes at session end and load them in other sessions for seamless context transfer.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/session-handoff",
+      "category": "productivity",
+      "hooks": {
+        "Stop": [{ "matcher": "", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/generate-handoff.sh" }] }],
+        "UserPromptSubmit": [{ "matcher": "", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/handle-handoff-cmd.sh" }] }],
+        "SessionStart": [{ "matcher": "startup|resume", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-pending-handoffs.sh" }] }]
+      }
+    },
+    {
+      "name": "secret-scanner",
+      "description": "Scan for API keys, tokens, and passwords in code changes to prevent accidental secret exposure.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/secret-scanner",
+      "category": "security",
+      "hooks": {
+        "PreToolUse": [{ "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-secrets.sh" }] }]
+      }
+    },
+    {
+      "name": "test-auto-runner",
+      "description": "Automatically detect and run related tests when source files are modified.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/test-auto-runner",
+      "category": "development",
+      "hooks": {
+        "PostToolUse": [{ "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/run-tests.sh" }] }]
+      }
+    },
+    {
+      "name": "performance-monitor",
+      "description": "Track command execution times, detect anomalies, and show build time trends.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/performance-monitor",
+      "category": "development",
+      "hooks": {
+        "PostToolUse": [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/track-performance.sh" }] }],
+        "SessionStart": [{ "matcher": "startup|resume", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/show-trends.sh" }] }]
+      }
+    },
+    {
+      "name": "env-sync",
+      "description": "Detect .env file changes and warn when .env.example is out of sync.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/env-sync",
+      "category": "development",
+      "hooks": {
+        "PostToolUse": [{ "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-env-sync.sh" }] }]
+      }
+    },
+    {
+      "name": "git-conflict-resolver",
+      "description": "Detect merge conflicts and provide context about both branches' changes to aid resolution.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/git-conflict-resolver",
+      "category": "development",
+      "hooks": {
+        "SessionStart": [{ "matcher": "startup|resume", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/detect-conflicts.sh" }] }],
+        "PostToolUse": [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-after-merge.sh" }] }]
+      }
+    },
+    {
+      "name": "code-convention-learner",
+      "description": "Learn project coding conventions from existing code and inject a style guide into context.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/code-convention-learner",
+      "category": "development",
+      "hooks": {
+        "PostToolUse": [{ "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/learn-conventions.sh" }] }],
+        "SessionStart": [{ "matcher": "startup|resume", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/inject-conventions.sh" }] }]
+      }
+    },
+    {
+      "name": "dependency-watchdog",
+      "description": "Monitor dependency files for vulnerabilities and outdated packages.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/dependency-watchdog",
+      "category": "security",
+      "hooks": {
+        "PostToolUse": [{ "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-deps.sh" }] }],
+        "SessionStart": [{ "matcher": "startup|resume", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/audit-deps.sh" }] }]
+      }
+    },
+    {
+      "name": "file-complexity-guard",
+      "description": "Warn when files exceed complexity thresholds (line count, function length, nesting depth).",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/file-complexity-guard",
+      "category": "development",
+      "hooks": {
+        "PostToolUse": [{ "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-complexity.sh" }] }]
+      }
+    },
+    {
+      "name": "dead-code-detector",
+      "description": "Detect potentially dead code references after function/class deletions or renames.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/dead-code-detector",
+      "category": "development",
+      "hooks": {
+        "PostToolUse": [{ "matcher": "Edit", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/detect-dead-refs.sh" }] }]
+      }
+    },
+    {
+      "name": "api-doc-sync",
+      "description": "Detect API endpoint changes and warn when API documentation is out of sync.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/api-doc-sync",
+      "category": "development",
+      "hooks": {
+        "PostToolUse": [{ "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-api-docs.sh" }] }]
+      }
+    },
+    {
+      "name": "migration-tracker",
+      "description": "Track database migration files and warn about unapplied or inconsistent migrations.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/migration-tracker",
+      "category": "development",
+      "hooks": {
+        "PostToolUse": [{ "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-migrations.sh" }] }],
+        "SessionStart": [{ "matcher": "startup|resume", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/show-migration-status.sh" }] }]
+      }
+    },
+    {
+      "name": "framework-vuln-scanner",
+      "description": "Check framework and runtime versions for known vulnerabilities and EOL status.",
+      "version": "1.0.0",
+      "author": { "name": "koyonx" },
+      "source": "./plugins/framework-vuln-scanner",
+      "category": "security",
+      "hooks": {
+        "SessionStart": [{ "matcher": "startup|resume", "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-versions.sh" }] }]
+      }
+    }
+  ]
+}
