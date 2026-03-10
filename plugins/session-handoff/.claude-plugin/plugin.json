@@ -1,0 +1,10 @@
+{
+    "name": "session-handoff",
+    "description": "Generate handoff notes at session end and load them in other sessions for seamless context transfer.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["handoff", "session", "context", "transfer", "continuity"]
+}
