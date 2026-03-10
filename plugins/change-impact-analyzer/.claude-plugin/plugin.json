@@ -1,0 +1,10 @@
+{
+    "name": "change-impact-analyzer",
+    "description": "Analyze import/dependency graphs to show impact of file changes and warn about affected files.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["impact", "analysis", "dependency", "import", "change"]
+}
