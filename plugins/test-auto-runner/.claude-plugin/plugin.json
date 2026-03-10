@@ -1,0 +1,10 @@
+{
+    "name": "test-auto-runner",
+    "description": "Automatically detect and run related tests when source files are modified.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["test", "auto-run", "testing", "ci", "feedback"]
+}
