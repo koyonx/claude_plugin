@@ -25,8 +25,8 @@ case "$RESOLVED_FILE" in
         ;;
 esac
 
-# ファイルが存在し、symlinkでないことを確認
-if [ ! -f "$RESOLVED_FILE" ] || [ -L "$FILE_PATH" ]; then
+# ファイルが存在し、symlinkでないことを確認（RESOLVED_FILEで検証）
+if [ ! -f "$RESOLVED_FILE" ] || [ -L "$RESOLVED_FILE" ]; then
     exit 0
 fi
 
