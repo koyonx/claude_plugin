@@ -1,0 +1,10 @@
+{
+    "name": "performance-monitor",
+    "description": "Track command execution times, detect anomalies, and show build time trends.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["performance", "monitoring", "build-time", "anomaly", "trends"]
+}
