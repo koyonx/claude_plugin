@@ -1,0 +1,10 @@
+{
+    "name": "dead-code-detector",
+    "description": "Detect potentially dead code references after function/class deletions or renames.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["dead-code", "refactoring", "cleanup", "references", "unused"]
+}
