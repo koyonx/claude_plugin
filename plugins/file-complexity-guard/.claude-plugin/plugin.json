@@ -1,0 +1,10 @@
+{
+    "name": "file-complexity-guard",
+    "description": "Warn when files exceed complexity thresholds (line count, function length, nesting depth).",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["complexity", "code-quality", "refactoring", "maintainability"]
+}
