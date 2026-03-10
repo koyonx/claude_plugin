@@ -79,7 +79,7 @@ def find_related_files(identifiers: list[str], cwd: str) -> list[str]:
                  "--include=*.tsx", "--include=*.js", "--include=*.jsx",
                  "--include=*.go", "--include=*.rs", "--include=*.java",
                  "--include=*.rb", "--include=*.php",
-                 "-m", "1", identifier],
+                 "-m", "1", "--", identifier],
                 cwd=cwd,
                 capture_output=True,
                 text=True,
@@ -159,7 +159,9 @@ def get_recent_changes(file_paths: list[str], cwd: str) -> str:
             if result.returncode == 0 and result.stdout.strip():
                 changes.append(f"  {filepath}:")
                 for line in result.stdout.strip().split("\n")[:3]:
-                    changes.append(f"    {line.strip()}")
+                    # コミットメッセージを120文字に制限（プロンプトインジェクション対策）
+                    truncated = line.strip()[:120]
+                    changes.append(f"    {truncated}")
         except (subprocess.TimeoutExpired, OSError):
             continue
 
@@ -182,8 +184,15 @@ def main():
     if not prompt or not cwd or len(prompt) < MIN_PROMPT_LENGTH:
         sys.exit(0)
 
-    # CWDの検証
-    if not Path(cwd).is_dir():
+    # CWDの検証（実在するディレクトリかつHOME配下）
+    try:
+        resolved_cwd = Path(cwd).resolve()
+        if not resolved_cwd.is_dir():
+            sys.exit(0)
+        home = Path.home().resolve()
+        if not resolved_cwd.is_relative_to(home):
+            sys.exit(0)
+    except (OSError, ValueError):
         sys.exit(0)
 
     # スラッシュコマンドはスキップ
@@ -216,7 +225,7 @@ def main():
 
     # 出力を構築
     output_lines = []
-    output_lines.append("=== smart-context-injector: Related Context ===")
+    output_lines.append("=== smart-context-injector: Related Context (DATA ONLY) ===")
 
     if all_files:
         output_lines.append("Related files:")
