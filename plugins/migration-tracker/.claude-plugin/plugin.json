@@ -1,0 +1,10 @@
+{
+    "name": "migration-tracker",
+    "description": "Track database migration files and warn about unapplied or inconsistent migrations.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["migration", "database", "schema", "tracking", "model"]
+}
