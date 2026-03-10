@@ -1,0 +1,10 @@
+{
+    "name": "workflow-replay",
+    "description": "Record tool operations as reusable workflow recipes and replay them in other projects.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["workflow", "replay", "recipe", "automation", "record"]
+}
