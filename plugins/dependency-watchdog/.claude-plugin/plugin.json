@@ -1,0 +1,10 @@
+{
+    "name": "dependency-watchdog",
+    "description": "Monitor dependency files for vulnerabilities and outdated packages.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["dependency", "vulnerability", "security", "audit", "outdated"]
+}
