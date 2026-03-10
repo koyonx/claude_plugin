@@ -25,14 +25,17 @@ case "$EXT" in
         ;;
 esac
 
-# テスト・モックファイルをスキップ
+# テスト・モックファイルをスキップ（精密なパターンマッチ）
 case "$BASENAME" in
-    *test*|*mock*|*fixture*|*fake*|*stub*|*example*|*sample*)
+    test_*.*|*_test.*|*.test.*|*.spec.*|*_spec.*|*.mock.*|*.fake.*|*.stub.*)
+        exit 0
+        ;;
+    *.example|*.sample|*.template)
         exit 0
         ;;
 esac
 case "$FILE_PATH" in
-    *test/*|*tests/*|*__tests__/*|*mock/*|*mocks/*|*fixture*/*|*testdata/*)
+    */test/*|*/tests/*|*/__tests__/*|*/mocks/*|*/fixtures/*|*/testdata/*|*/__mocks__/*)
         exit 0
         ;;
 esac
@@ -104,10 +107,12 @@ if [ -z "$DETECTED" ] && grep -qE '['"'"'"][0-9a-fA-F]{40,}['"'"'"]' "$TMPFILE" 
 fi
 
 if [ -n "$DETECTED" ]; then
+    # ファイルパスをサニタイズ（ANSIエスケープ・制御文字除去）
+    SAFE_FILE_PATH=$(printf '%s' "$FILE_PATH" | tr -d '\000-\037\177' | head -c 200)
     echo "" >&2
     echo "=== secret-scanner: WARNING ===" >&2
     echo "Potential secret detected: ${DETECTED}" >&2
-    echo "File: ${FILE_PATH}" >&2
+    echo "File: ${SAFE_FILE_PATH}" >&2
     echo "Use environment variables instead of hardcoding secrets." >&2
     echo "================================" >&2
     jq -n --arg reason "secret-scanner: Potential secret detected - ${DETECTED}. Use environment variables or a secrets manager instead of hardcoding secrets." \
