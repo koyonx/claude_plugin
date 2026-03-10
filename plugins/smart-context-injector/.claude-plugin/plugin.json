@@ -1,0 +1,10 @@
+{
+    "name": "smart-context-injector",
+    "description": "Automatically enrich user prompts with related files, tests, and recent changes.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["context", "auto", "smart", "prompt", "enhancement"]
+}
