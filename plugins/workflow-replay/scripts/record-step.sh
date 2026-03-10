@@ -29,15 +29,15 @@ RECORDING_DIR="${DATA_DIR}/recording"
 mkdir -p "$RECORDING_DIR"
 chmod 700 "$DATA_DIR" 2>/dev/null || true
 
-# 録画中フラグの確認
+# 録画ファイル・フラグ
 RECORDING_FLAG="${RECORDING_DIR}/${SAFE_SESSION_ID}.recording"
+RECORDING_FILE="${RECORDING_DIR}/${SAFE_SESSION_ID}.jsonl"
+LOCK_FILE="${RECORDING_FILE}.lock"
+
+# 録画中フラグの事前チェック（ロック外で高速パス）
 if [ ! -f "$RECORDING_FLAG" ]; then
     exit 0
 fi
-
-# 録画ファイル
-RECORDING_FILE="${RECORDING_DIR}/${SAFE_SESSION_ID}.jsonl"
-LOCK_FILE="${RECORDING_FILE}.lock"
 
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
@@ -78,9 +78,13 @@ case "$TOOL_NAME" in
         ;;
 esac
 
-# ステップを記録（flock排他制御）
+# ステップを記録（flock排他制御、フラグの再チェック付き）
 (
     flock -w 5 200 || exit 0
+    # ロック内でフラグを再チェック（TOCTOU防止）
+    if [ ! -f "$RECORDING_FLAG" ]; then
+        exit 0
+    fi
     printf '%s\n' "$STEP" >> "$RECORDING_FILE"
 
     # ステップ数制限（最大500ステップ）
