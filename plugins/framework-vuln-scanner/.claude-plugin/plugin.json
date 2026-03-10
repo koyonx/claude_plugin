@@ -1,0 +1,10 @@
+{
+    "name": "framework-vuln-scanner",
+    "description": "Check framework and runtime versions for known vulnerabilities and EOL status.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["framework", "vulnerability", "version", "eol", "security", "runtime"]
+}
