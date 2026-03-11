@@ -1,0 +1,10 @@
+{
+    "name": "session-analytics",
+    "description": "Track session productivity metrics including file changes, success rates, and task velocity.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["analytics", "productivity", "metrics", "session", "report"]
+}
