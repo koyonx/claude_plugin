@@ -1,0 +1,10 @@
+{
+    "name": "ascii-diagram-gen",
+    "description": "Auto-generate ASCII art diagrams of class relationships and call flows from code changes.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["diagram", "ascii", "visualization", "class", "architecture"]
+}
