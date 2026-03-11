@@ -1,0 +1,10 @@
+{
+    "name": "pair-programming-log",
+    "description": "Record human-AI decision logs in ADR format for architectural knowledge preservation.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["adr", "decision", "log", "architecture", "pair-programming"]
+}
