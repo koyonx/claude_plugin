@@ -1,0 +1,10 @@
+{
+    "name": "rollback-checkpoint",
+    "description": "Save and restore explicit checkpoints of working directory state for easy rollback.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["checkpoint", "rollback", "restore", "backup", "undo"]
+}
