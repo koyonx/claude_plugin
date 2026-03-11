@@ -1,0 +1,10 @@
+{
+    "name": "blast-radius-simulator",
+    "description": "Simulate and display the impact of destructive commands before execution.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["blast-radius", "safety", "destructive", "simulation", "impact"]
+}
