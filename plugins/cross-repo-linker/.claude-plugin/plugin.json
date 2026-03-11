@@ -1,0 +1,10 @@
+{
+    "name": "cross-repo-linker",
+    "description": "Track dependencies across multiple repositories and warn about cross-repo impact.",
+    "version": "1.0.0",
+    "author": {
+        "name": "koyonx"
+    },
+    "license": "MIT",
+    "keywords": ["cross-repo", "dependency", "monorepo", "linking", "impact"]
+}
